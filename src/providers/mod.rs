@@ -8,21 +8,13 @@ pub use openai::OpenAIProvider;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
+#[derive(Default)]
 pub struct TokenUsage {
     pub prompt_tokens: usize,
     pub completion_tokens: usize,
     pub total_tokens: usize,
 }
 
-impl Default for TokenUsage {
-    fn default() -> Self {
-        Self {
-            prompt_tokens: 0,
-            completion_tokens: 0,
-            total_tokens: 0,
-        }
-    }
-}
 
 #[derive(Debug, Clone, Copy)]
 pub enum AIProvider {
