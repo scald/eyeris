@@ -160,7 +160,11 @@ impl ImagePrompt {
             PromptFormat::PlatformSpecific(platform) => format!("Analyze this {} content with platform-specific considerations.", platform),
         };
 
-        Self { text, format, config: AnalysisConfig::default() }
+        Self {
+            text,
+            format,
+            config: AnalysisConfig::default(),
+        }
     }
 
     pub fn to_openai_content(&self) -> serde_json::Value {
@@ -217,7 +221,9 @@ mod tests {
         ]);
         let prompt = ImagePrompt::new(format);
         // Update assertion to match the actual prompt text format
-        assert!(prompt.text.contains("Analyze this image for the following aspects:"));
+        assert!(prompt
+            .text
+            .contains("Analyze this image for the following aspects:"));
     }
 
     #[test]

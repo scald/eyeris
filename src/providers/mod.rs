@@ -7,14 +7,12 @@ pub use ollama::OllamaProvider;
 pub use openai::OpenAIProvider;
 use serde::Serialize;
 
-#[derive(Debug, Clone, Serialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct TokenUsage {
     pub prompt_tokens: usize,
     pub completion_tokens: usize,
     pub total_tokens: usize,
 }
-
 
 #[derive(Debug, Clone, Copy)]
 pub enum AIProvider {

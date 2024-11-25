@@ -34,7 +34,7 @@ impl ImageProcessor {
     ///     Some("moondream".to_string()),
     ///     None
     /// );
-    /// 
+    ///
     /// # async fn example() {
     /// let image_data = std::fs::read("image.jpg").unwrap();
     /// let (analysis, token_usage) = processor.process(&image_data).await.unwrap();
