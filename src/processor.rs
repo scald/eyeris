@@ -7,19 +7,12 @@ use image::imageops::FilterType;
 use image::{DynamicImage, ImageBuffer};
 use rayon::prelude::*;
 use std::time::Instant;
-
-#[derive(Debug, Clone, Default)]
-pub struct TokenStats {
-    pub prompt_tokens: usize,
-    pub completion_tokens: usize,
-    pub total_tokens: usize,
-}
+use crate::providers::TokenUsage;
 
 /// The main processor for analyzing images.
 pub struct ImageProcessor {
     provider: Box<dyn Provider>,
     format: PromptFormat,
-    pub token_stats: std::sync::Arc<parking_lot::RwLock<TokenStats>>,
 }
 
 impl ImageProcessor {
@@ -43,21 +36,18 @@ impl ImageProcessor {
     /// );
     /// ```
     pub fn new(provider: AIProvider, model: Option<String>, format: Option<PromptFormat>) -> Self {
-        let token_stats = std::sync::Arc::new(parking_lot::RwLock::new(TokenStats::default()));
-
         let provider: Box<dyn Provider> = match provider {
-            AIProvider::OpenAI => Box::new(OpenAIProvider::new(model, token_stats.clone())),
+            AIProvider::OpenAI => Box::new(OpenAIProvider::new(model)),
             AIProvider::Ollama => Box::new(OllamaProvider::new(model)),
         };
 
         Self {
             provider,
             format: format.unwrap_or_default(),
-            token_stats,
         }
     }
 
-    pub async fn process(&self, image_data: &[u8]) -> Result<String, ProcessorError> {
+    pub async fn process(&self, image_data: &[u8]) -> Result<(String, TokenUsage), ProcessorError> {
         let start = Instant::now();
 
         // Pre-allocate the base64 string
@@ -77,7 +67,7 @@ impl ImageProcessor {
             self.create_thumbnail(img).await
         };
 
-        let (analysis, _thumbnail_result) = tokio::join!(analysis_future, thumbnail_future);
+        let (analysis_result, _thumbnail_result) = tokio::join!(analysis_future, thumbnail_future);
 
         tracing::info!(
             duration_ms = parallel_start.elapsed().as_millis(),
@@ -89,10 +79,10 @@ impl ImageProcessor {
             "Total image processing completed"
         );
 
-        analysis
+        analysis_result
     }
 
-    async fn analyze_image(&self, base64_image: &str) -> Result<String, ProcessorError> {
+    async fn analyze_image(&self, base64_image: &str) -> Result<(String, TokenUsage), ProcessorError> {
         let start = Instant::now();
 
         // Get the length before moving the string
@@ -150,14 +140,14 @@ impl ImageProcessor {
         // Create the prompt before calling the provider
         let prompt = ImagePrompt::new(self.format.clone());
 
-        let result = self.provider.analyze(&optimized_image, &prompt.text).await;
+        let (analysis, token_usage) = self.provider.analyze(&optimized_image, &prompt.text).await?;
 
         tracing::info!(
             total_duration_ms = start.elapsed().as_millis(),
             "Total analysis completed"
         );
 
-        result
+        Ok((analysis, token_usage.unwrap_or_default()))
     }
 
     async fn create_thumbnail(&self, image: DynamicImage) -> Result<Vec<u8>, ProcessorError> {

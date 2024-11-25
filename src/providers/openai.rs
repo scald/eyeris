@@ -1,12 +1,9 @@
-use super::Provider;
+use super::{Provider, TokenUsage};
 use crate::errors::ProcessorError;
-use crate::processor::TokenStats;
 use async_trait::async_trait;
-use parking_lot::RwLock;
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::json;
-use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
 struct OpenAIResponse {
@@ -34,22 +31,20 @@ struct OpenAIUsage {
 pub struct OpenAIProvider {
     client: Client,
     model: String,
-    token_stats: Arc<RwLock<TokenStats>>,
 }
 
 impl OpenAIProvider {
-    pub fn new(model: Option<String>, token_stats: Arc<RwLock<TokenStats>>) -> Self {
+    pub fn new(model: Option<String>) -> Self {
         Self {
             client: Client::new(),
-            model: model.unwrap_or_else(|| "gpt-4o-mini".to_string()),
-            token_stats,
+            model: model.unwrap_or_else(|| "gpt-4-vision-preview".to_string()),
         }
     }
 }
 
 #[async_trait]
 impl Provider for OpenAIProvider {
-    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<String, ProcessorError> {
+    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<(String, Option<TokenUsage>), ProcessorError> {
         let api_key = std::env::var("OPENAI_API_KEY").map_err(ProcessorError::EnvError)?;
 
         let request_body = json!({
@@ -100,21 +95,6 @@ impl Provider for OpenAIProvider {
             ))
         })?;
 
-        // Update token stats if usage information is available
-        if let Some(usage) = response.usage {
-            let mut stats = self.token_stats.write();
-            stats.prompt_tokens += usage.prompt_tokens;
-            stats.completion_tokens += usage.completion_tokens;
-            stats.total_tokens += usage.total_tokens;
-
-            tracing::info!(
-                prompt_tokens = usage.prompt_tokens,
-                completion_tokens = usage.completion_tokens,
-                total_tokens = usage.total_tokens,
-                "Token usage for request"
-            );
-        }
-
         let analysis = response
             .choices
             .first()
@@ -125,6 +105,12 @@ impl Provider for OpenAIProvider {
             .content
             .clone();
 
-        Ok(analysis)
+        let token_usage = response.usage.map(|usage| TokenUsage {
+            prompt_tokens: usage.prompt_tokens,
+            completion_tokens: usage.completion_tokens,
+            total_tokens: usage.total_tokens,
+        });
+
+        Ok((analysis, token_usage))
     }
 }

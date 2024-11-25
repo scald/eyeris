@@ -1,4 +1,4 @@
-use super::Provider;
+use super::{Provider, TokenUsage};
 use crate::errors::ProcessorError;
 use async_trait::async_trait;
 use reqwest::Client;
@@ -32,7 +32,7 @@ impl OllamaProvider {
 
 #[async_trait]
 impl Provider for OllamaProvider {
-    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<String, ProcessorError> {
+    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<(String, Option<TokenUsage>), ProcessorError> {
         let ollama_request = OllamaRequest {
             model: self.model.clone(),
             prompt: prompt.to_string(),
@@ -75,6 +75,6 @@ impl Provider for OllamaProvider {
             ));
         }
 
-        Ok(full_response)
+        Ok((full_response, None))
     }
 }

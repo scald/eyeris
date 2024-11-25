@@ -13,6 +13,7 @@ use std::sync::Arc;
 use std::sync::OnceLock;
 use std::time::Instant;
 use tokio::sync::Semaphore;
+use eyeris::providers::TokenUsage;
 
 // Create a static processor pool
 static PROCESSOR_POOL: OnceLock<Arc<ImageProcessor>> = OnceLock::new();
@@ -33,13 +34,6 @@ struct ProcessResponse {
 struct ProcessedData {
     analysis: String,
     token_usage: TokenUsage,
-}
-
-#[derive(Serialize)]
-struct TokenUsage {
-    prompt_tokens: usize,
-    completion_tokens: usize,
-    total_tokens: usize,
 }
 
 #[derive(Deserialize)]
@@ -162,20 +156,13 @@ async fn process_image(
     );
 
     match result {
-        Ok(analysis) => {
-            // Get current token stats
-            let token_stats = processor.token_stats.read();
-
+        Ok((analysis, token_usage)) => {
             Ok(Json(ProcessResponse {
                 success: true,
                 message: "Image processed successfully".to_string(),
                 data: Some(ProcessedData {
                     analysis,
-                    token_usage: TokenUsage {
-                        prompt_tokens: token_stats.prompt_tokens,
-                        completion_tokens: token_stats.completion_tokens,
-                        total_tokens: token_stats.total_tokens,
-                    },
+                    token_usage,
                 }),
             }))
         }

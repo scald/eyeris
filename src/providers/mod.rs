@@ -5,6 +5,24 @@ use crate::errors::ProcessorError;
 use async_trait::async_trait;
 pub use ollama::OllamaProvider;
 pub use openai::OpenAIProvider;
+use serde::Serialize;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct TokenUsage {
+    pub prompt_tokens: usize,
+    pub completion_tokens: usize,
+    pub total_tokens: usize,
+}
+
+impl Default for TokenUsage {
+    fn default() -> Self {
+        Self {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            total_tokens: 0,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum AIProvider {
@@ -14,5 +32,5 @@ pub enum AIProvider {
 
 #[async_trait]
 pub trait Provider: Send + Sync {
-    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<String, ProcessorError>;
+    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<(String, Option<TokenUsage>), ProcessorError>;
 }
