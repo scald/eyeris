@@ -131,7 +131,7 @@ impl ImageProcessor {
                     resized.height(),
                     image::ColorType::Rgb8,
                 )
-                .map_err(|e| ProcessorError::ImageLoadError(e))?;
+                .map_err(ProcessorError::ImageLoadError)?;
 
             // Convert back to base64
             Ok::<_, ProcessorError>(base64::engine::general_purpose::STANDARD.encode(&buffer))

@@ -98,7 +98,8 @@ async fn process_image(
         let processor = Arc::new(ImageProcessor::new(
             match options.provider.to_lowercase().as_str() {
                 "openai" => AIProvider::OpenAI,
-                "ollama" | _ => AIProvider::Ollama,
+                "ollama" => AIProvider::Ollama,
+                _ => AIProvider::OpenAI,
             },
             Some(options.model),
             Some(options.format),
