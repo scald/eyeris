@@ -31,6 +31,7 @@ struct OpenAIUsage {
 pub struct OpenAIProvider {
     client: Client,
     model: String,
+    temperature: f32,
 }
 
 impl OpenAIProvider {
@@ -38,6 +39,7 @@ impl OpenAIProvider {
         Self {
             client: Client::new(),
             model: model.unwrap_or_else(|| "gpt-4-vision-preview".to_string()),
+            temperature: 0.8,
         }
     }
 }
@@ -53,6 +55,7 @@ impl Provider for OpenAIProvider {
 
         let request_body = json!({
             "model": self.model,
+            "temperature": self.temperature,
             "messages": [{
                 "role": "user",
                 "content": [
@@ -68,7 +71,7 @@ impl Provider for OpenAIProvider {
                     }
                 ]
             }],
-            "max_tokens": 1000
+            "max_tokens": 10000
         });
 
         let response = self

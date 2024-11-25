@@ -145,19 +145,159 @@ impl Default for AnalysisConfig {
 impl ImagePrompt {
     pub fn new(format: PromptFormat) -> Self {
         let text = match &format {
-            PromptFormat::Detailed => "Describe this image in detail, including all visual elements, colors, composition, and any notable features.".to_string(),
             PromptFormat::Concise => "Briefly describe what you see in this image.".to_string(),
-            PromptFormat::Json => "Analyze this image and provide a structured JSON response with key visual elements and attributes.".to_string(),
-            PromptFormat::List => "List the main elements and features present in this image.".to_string(),
-            PromptFormat::CategorySpecific(category) => format!("Analyze this {} image with relevant domain-specific details.", category),
+            PromptFormat::Detailed =>
+                "Describe this image in detail, including all visual elements, colors, composition, and any notable features.".to_string(),
+            PromptFormat::List =>
+                "List the main elements and features present in this image.".to_string(),
+            PromptFormat::Json =>
+                r#"SYSTEM INSTRUCTION - STRICT JSON OUTPUT REQUIRED
+===================================================
+You are an image analysis system operating in STRICT JSON MODE. 
+YOU MUST FOLLOW THESE RULES WITHOUT EXCEPTION:
+
+1. Output MUST be pure, valid, parseable JSON
+2. NO prose, NO explanations, NO markdown
+3. NO text before the opening {
+4. NO text after the closing }
+5. MUST maintain proper JSON syntax
+6. ALL strings MUST be properly escaped
+7. NEVER use JavaScript-style comments
+8. NEVER use trailing commas
+9. ALL arrays must be properly closed
+10. ALL objects must be properly closed
+11. MUST use double quotes for keys and strings
+12. Numbers must be valid JSON numbers
+
+VALIDATION STEPS - You MUST:
+1. Start response with {
+2. End response with }
+3. Verify all arrays have matching []
+4. Verify all objects have matching {}
+5. Ensure all strings use "quotes"
+6. Validate number formats
+7. Confirm no trailing commas
+8. Check for proper escaping
+
+REQUIRED OUTPUT STRUCTURE:
+{
+    "classification": {
+        "primary_category": "string",
+        "secondary_categories": ["string"],
+        "confidence": 0.0-1.0,
+        "discovered_categories": [{
+            "name": "string",
+            "confidence": 0.0-1.0,
+            "reasoning": "string"
+        }]
+    },
+    "content": {
+        "main_elements": [{
+            "type": "string",
+            "description": "string",
+            "location": "string",
+            "relationships": [{
+                "related_to": "string",
+                "type": "string"
+            }]
+        }],
+        "context": {
+            "setting": "string",
+            "purpose": "string",
+            "time_period": "string"
+        }
+    },
+    "analysis": {
+        "visual": {
+            "composition": {
+                "layout": "string",
+                "style": "string"
+            },
+            "colors": [{
+                "name": "string",
+                "hex": "string",
+                "dominance": 0.0-1.0
+            }]
+        },
+        "semantic": {
+            "themes": ["string"],
+            "emotional_tone": {
+                "primary": "string",
+                "confidence": 0.0-1.0
+            },
+            "symbolism": [{
+                "symbol": "string",
+                "meaning": "string"
+            }]
+        },
+        "technical": {
+            "quality": "string",
+            "creation_method": "string",
+            "notable_characteristics": ["string"]
+        }
+    },
+    "extracted_data": {
+        "text": [{
+            "content": "string",
+            "location": "string",
+            "purpose": "string"
+        }],
+        "data_points": [{
+            "type": "string",
+            "value": "string"
+        }]
+    },
+    "insights": {
+        "key_observations": ["string"],
+        "unusual_elements": ["string"],
+        "suggestions": ["string"]
+    },
+    "dynamic_extensions": {}
+}
+
+DATA TYPE REQUIREMENTS:
+- Strings: Must be valid UTF-8, properly escaped
+- Numbers: Must be valid JSON numbers
+- Arrays: Must be valid, even if empty []
+- Objects: Must be valid, even if empty {}
+- Booleans: Must be true or false (lowercase)
+- Nulls: Must be null (lowercase)
+
+CONFIDENCE SCORES:
+- MUST be between 0.0 and 1.0
+- MUST be decimal numbers
+- MUST NOT be strings
+- Examples: 0.95, 0.7, 0.32
+
+COLOR CODES:
+- MUST be valid hex codes
+- MUST include # prefix
+- MUST be 6 characters after #
+- Example: #FF5733
+
+ARRAYS:
+- MUST use [] brackets
+- MUST separate items with commas
+- MUST NOT have trailing comma
+- Empty arrays are valid: []
+
+REMEMBER:
+1. This is a programmatic interface
+2. Output will be parsed by code
+3. ANY deviation from JSON structure will cause errors
+4. NO human-readable explanations allowed
+5. ALL analysis must fit within this structure
+
+BEGIN ANALYSIS NOW WITH OPENING { AND END WITH CLOSING }"#.to_string(),
+            PromptFormat::CategorySpecific(category) =>
+                format!("Analyze this {} image with relevant domain-specific details.", category),
             PromptFormat::Custom(traits) => {
-                format!(
-                    "Analyze this image for the following aspects:\n{}",
-                    traits.join("\n- ")
-                )
+                format!("Analyze this image for the following aspects:\n{}", traits.join("\n- "))
             }
-            PromptFormat::Discovery => "Discover and describe all interesting aspects of this image.".to_string(),
-            PromptFormat::PlatformSpecific(platform) => format!("Analyze this {} content with platform-specific considerations.", platform),
+            PromptFormat::Discovery =>
+                "Discover and describe all interesting aspects of this image.".to_string(),
+            PromptFormat::PlatformSpecific(platform) =>
+                format!("Analyze this {} content with platform-specific considerations.", platform),
         };
 
         Self {
