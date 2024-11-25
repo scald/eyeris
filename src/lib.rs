@@ -21,7 +21,7 @@
 //!     
 //!     // Process an image
 //!     let image_data = std::fs::read("image.jpg").unwrap();
-//!     let analysis = processor.process(&image_data).await.unwrap();
+//!     let (analysis, token_usage) = processor.process(&image_data).await.unwrap();
 //!     println!("Analysis: {}", analysis);
 //! }
 //! ```
@@ -36,4 +36,4 @@ pub mod utils;
 pub use errors::ProcessorError;
 pub use processor::ImageProcessor;
 pub use prompts::{ImagePrompt, PromptFormat};
-pub use providers::AIProvider;
+pub use providers::{AIProvider, TokenUsage};
