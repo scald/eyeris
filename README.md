@@ -1,6 +1,6 @@
-# Image Analysis Service
+# eyeris
 
-[![Build Status](https://github.com/yourusername/project-name/workflows/CI/badge.svg)](https://github.com/yourusername/project-name/actions)
+[![Build Status](https://github.com/scald/eyeris/workflows/CI/badge.svg)](https://github.com/scald/eyeris/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Crates.io](https://img.shields.io/crates/v/eyeris.svg)](https://crates.io/crates/eyeris)
 [![Documentation](https://docs.rs/eyeris/badge.svg)](https://docs.rs/eyeris)
