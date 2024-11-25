@@ -1,12 +1,12 @@
-use image::{ImageBuffer, DynamicImage};
-use rayon::prelude::*;
+use crate::errors::ProcessorError;
+use crate::prompts::{ImagePrompt, PromptFormat};
+use crate::providers::{AIProvider, OllamaProvider, OpenAIProvider, Provider};
 use base64::Engine;
 use image::codecs::jpeg::JpegEncoder;
 use image::imageops::FilterType;
-use crate::prompts::{ImagePrompt, PromptFormat};
+use image::{DynamicImage, ImageBuffer};
+use rayon::prelude::*;
 use std::time::Instant;
-use crate::providers::{Provider, OpenAIProvider, OllamaProvider, AIProvider};
-use crate::errors::ProcessorError;
 
 #[derive(Debug, Clone, Default)]
 pub struct TokenStats {
@@ -44,7 +44,7 @@ impl ImageProcessor {
     /// ```
     pub fn new(provider: AIProvider, model: Option<String>, format: Option<PromptFormat>) -> Self {
         let token_stats = std::sync::Arc::new(parking_lot::RwLock::new(TokenStats::default()));
-        
+
         let provider: Box<dyn Provider> = match provider {
             AIProvider::OpenAI => Box::new(OpenAIProvider::new(model, token_stats.clone())),
             AIProvider::Ollama => Box::new(OllamaProvider::new(model)),
@@ -59,7 +59,7 @@ impl ImageProcessor {
 
     pub async fn process(&self, image_data: &[u8]) -> Result<String, ProcessorError> {
         let start = Instant::now();
-        
+
         // Pre-allocate the base64 string
         let base64_start = Instant::now();
         let base64_image = base64::engine::general_purpose::STANDARD.encode(image_data);
@@ -78,7 +78,7 @@ impl ImageProcessor {
         };
 
         let (analysis, _thumbnail_result) = tokio::join!(analysis_future, thumbnail_future);
-        
+
         tracing::info!(
             duration_ms = parallel_start.elapsed().as_millis(),
             "Parallel processing completed"
@@ -94,20 +94,21 @@ impl ImageProcessor {
 
     async fn analyze_image(&self, base64_image: &str) -> Result<String, ProcessorError> {
         let start = Instant::now();
-        
+
         // Get the length before moving the string
         let original_size = base64_image.len();
-        
+
         // Clone the string before moving into spawn_blocking
         let base64_image_owned = base64_image.to_string();
         let optimized_image = tokio::task::spawn_blocking(move || {
             // Use base64_image_owned instead of base64_image
-            let image_data = base64::engine::general_purpose::STANDARD.decode(&base64_image_owned)
+            let image_data = base64::engine::general_purpose::STANDARD
+                .decode(&base64_image_owned)
                 .map_err(|e| ProcessorError::Base64Error(e.to_string()))?;
-            
+
             // Load image
             let img = image::load_from_memory(&image_data)?;
-            
+
             // Resize to smaller dimensions while maintaining aspect ratio
             // Most vision models don't need images larger than 768px
             let max_dim = 768;
@@ -122,22 +123,27 @@ impl ImageProcessor {
 
             // Convert to RGB and compress as JPEG with moderate quality
             let mut buffer = Vec::new();
-            let mut encoder = JpegEncoder::new_with_quality(&mut buffer, 10); 
-            encoder.encode(
-                resized.to_rgb8().as_raw(),
-                resized.width(),
-                resized.height(),
-                image::ColorType::Rgb8
-            ).map_err(|e| ProcessorError::ImageLoadError(e))?;
+            let mut encoder = JpegEncoder::new_with_quality(&mut buffer, 10);
+            encoder
+                .encode(
+                    resized.to_rgb8().as_raw(),
+                    resized.width(),
+                    resized.height(),
+                    image::ColorType::Rgb8,
+                )
+                .map_err(|e| ProcessorError::ImageLoadError(e))?;
 
             // Convert back to base64
             Ok::<_, ProcessorError>(base64::engine::general_purpose::STANDARD.encode(&buffer))
-        }).await.map_err(|e| ProcessorError::ThumbnailError(e.to_string()))??;
+        })
+        .await
+        .map_err(|e| ProcessorError::ThumbnailError(e.to_string()))??;
 
         tracing::info!(
             original_size = original_size,
             optimized_size = optimized_image.len(),
-            reduction_percent = ((original_size - optimized_image.len()) as f32 / original_size as f32 * 100.0),
+            reduction_percent =
+                ((original_size - optimized_image.len()) as f32 / original_size as f32 * 100.0),
             "Image optimization completed"
         );
 
@@ -156,7 +162,7 @@ impl ImageProcessor {
 
     async fn create_thumbnail(&self, image: DynamicImage) -> Result<Vec<u8>, ProcessorError> {
         let start = Instant::now();
-        
+
         let result = tokio::task::spawn_blocking(move || {
             let resize_start = Instant::now();
             let thumbnail = image.resize(300, 300, FilterType::Triangle);
@@ -165,23 +171,26 @@ impl ImageProcessor {
                 duration_ms = resize_start.elapsed().as_millis(),
                 "Image resize completed"
             );
-            
+
             let enhance_start = Instant::now();
             let width = rgb_image.width() as usize;
             let height = rgb_image.height() as usize;
-            
-            let enhanced_pixels: Vec<_> = rgb_image.chunks_exact(width * 3)
+
+            let enhanced_pixels: Vec<_> = rgb_image
+                .chunks_exact(width * 3)
                 .enumerate()
                 .par_bridge()
                 .flat_map(|(y, row)| {
-                    (0..width).map(move |x| {
-                        let pixel = image::Rgb([
-                            (row[x * 3] as f32 * 1.1).min(255.0) as u8,
-                            (row[x * 3 + 1] as f32 * 1.1).min(255.0) as u8,
-                            (row[x * 3 + 2] as f32 * 1.1).min(255.0) as u8,
-                        ]);
-                        (x as u32, y as u32, pixel)
-                    }).collect::<Vec<_>>()
+                    (0..width)
+                        .map(move |x| {
+                            let pixel = image::Rgb([
+                                (row[x * 3] as f32 * 1.1).min(255.0) as u8,
+                                (row[x * 3 + 1] as f32 * 1.1).min(255.0) as u8,
+                                (row[x * 3 + 2] as f32 * 1.1).min(255.0) as u8,
+                            ]);
+                            (x as u32, y as u32, pixel)
+                        })
+                        .collect::<Vec<_>>()
                 })
                 .collect();
 
@@ -198,20 +207,23 @@ impl ImageProcessor {
 
             let mut output = Vec::with_capacity(width * height * 3);
             let mut encoder = JpegEncoder::new_with_quality(&mut output, 85);
-            encoder.encode(
-                enhanced.as_raw(),
-                enhanced.width(),
-                enhanced.height(),
-                image::ColorType::Rgb8
-            ).map_err(|e| ProcessorError::ThumbnailError(e.to_string()))?;
+            encoder
+                .encode(
+                    enhanced.as_raw(),
+                    enhanced.width(),
+                    enhanced.height(),
+                    image::ColorType::Rgb8,
+                )
+                .map_err(|e| ProcessorError::ThumbnailError(e.to_string()))?;
 
             tracing::info!(
                 duration_ms = buffer_start.elapsed().as_millis(),
                 "Buffer creation and JPEG encoding completed"
             );
-            
+
             Ok(output)
-        }).await
+        })
+        .await
         .map_err(|e| ProcessorError::ThumbnailError(e.to_string()))?;
 
         tracing::info!(
@@ -221,4 +233,4 @@ impl ImageProcessor {
 
         result
     }
-} 
+}

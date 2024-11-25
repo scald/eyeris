@@ -1,3 +1,4 @@
+use anyhow::Result;
 use axum::{
     extract::{Multipart, Query, State},
     http::StatusCode,
@@ -5,18 +6,13 @@ use axum::{
     routing::post,
     Router,
 };
+use bytes::Bytes;
+use eyeris::{processor::ImageProcessor, prompts::PromptFormat, providers::AIProvider};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tokio::sync::Semaphore;
-use anyhow::Result;
-use bytes::Bytes;
 use std::sync::OnceLock;
 use std::time::Instant;
-use eyeris::{
-    providers::AIProvider,
-    processor::ImageProcessor,
-    prompts::PromptFormat,
-};
+use tokio::sync::Semaphore;
 
 // Create a static processor pool
 static PROCESSOR_POOL: OnceLock<Arc<ImageProcessor>> = OnceLock::new();
@@ -82,7 +78,7 @@ async fn main() -> Result<()> {
     // Start server
     let addr = "0.0.0.0:3000";
     tracing::info!("Starting server on {}", addr);
-    
+
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
 
@@ -115,7 +111,10 @@ async fn process_image(
     });
 
     let permit_start = Instant::now();
-    let _permit = state.semaphore.acquire().await
+    let _permit = state
+        .semaphore
+        .acquire()
+        .await
         .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
     tracing::info!(
         duration_ms = permit_start.elapsed().as_millis(),
@@ -123,8 +122,10 @@ async fn process_image(
     );
 
     let multipart_start = Instant::now();
-    let image_data: Bytes = if let Some(field) = multipart.next_field().await
-        .map_err(|_| StatusCode::BAD_REQUEST)? 
+    let image_data: Bytes = if let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|_| StatusCode::BAD_REQUEST)?
     {
         if field.name().unwrap_or("") != "image" {
             return Ok(Json(ProcessResponse {
@@ -163,24 +164,24 @@ async fn process_image(
         Ok(analysis) => {
             // Get current token stats
             let token_stats = processor.token_stats.read();
-            
+
             Ok(Json(ProcessResponse {
                 success: true,
                 message: "Image processed successfully".to_string(),
-                data: Some(ProcessedData { 
+                data: Some(ProcessedData {
                     analysis,
                     token_usage: TokenUsage {
                         prompt_tokens: token_stats.prompt_tokens,
                         completion_tokens: token_stats.completion_tokens,
                         total_tokens: token_stats.total_tokens,
-                    }
+                    },
                 }),
             }))
-        },
+        }
         Err(e) => Ok(Json(ProcessResponse {
             success: false,
             message: format!("Processing failed: {}", e),
             data: None,
         })),
     }
-} 
+}

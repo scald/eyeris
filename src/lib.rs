@@ -1,16 +1,16 @@
 //! eyeris is a high-performance image analysis service.
-//! 
+//!
 //! # Features
-//! 
+//!
 //! - Multiple AI provider support (OpenAI, Ollama)
 //! - Image optimization and processing
 //! - Customizable analysis formats
-//! 
+//!
 //! # Example
-//! 
+//!
 //! ```rust,no_run
 //! use eyeris::{ImageProcessor, AIProvider};
-//! 
+//!
 //! #[tokio::main]
 //! async fn main() {
 //!     let processor = ImageProcessor::new(
@@ -26,14 +26,14 @@
 //! }
 //! ```
 
+pub mod errors;
 pub mod processor;
 pub mod prompts;
 pub mod providers;
-pub mod errors;
 pub mod utils;
 
 // Re-export commonly used types
+pub use errors::ProcessorError;
 pub use processor::ImageProcessor;
 pub use prompts::{ImagePrompt, PromptFormat};
-pub use errors::ProcessorError;
-pub use providers::AIProvider; 
+pub use providers::AIProvider;

@@ -20,14 +20,16 @@ pub enum PromptFormat {
 #[serde(rename_all = "snake_case")]
 pub enum ContentCategory {
     // Digital Content
-    Screenshot { platform: Option<String> },
+    Screenshot {
+        platform: Option<String>,
+    },
     UserInterface,
     SocialMediaPost,
     DigitalArt,
     Website,
     Software,
     VideoGame,
-    
+
     // Documents
     Document,
     Receipt,
@@ -36,7 +38,7 @@ pub enum ContentCategory {
     Form,
     Identification,
     Certificate,
-    
+
     // Visual Content
     Photo,
     Artwork,
@@ -45,7 +47,7 @@ pub enum ContentCategory {
     Comic,
     Advertisement,
     Poster,
-    
+
     // Instructional
     Recipe,
     Tutorial,
@@ -54,7 +56,7 @@ pub enum ContentCategory {
     Schematic,
     Manual,
     Guide,
-    
+
     // Data Visualization
     Chart,
     Graph,
@@ -63,14 +65,14 @@ pub enum ContentCategory {
     Timeline,
     Flowchart,
     MindMap,
-    
+
     // Location/Space
     Map,
     FloorPlan,
     Architecture,
     Landscape,
     Satellite,
-    
+
     // Special Purpose
     Medical,
     Scientific,
@@ -78,7 +80,7 @@ pub enum ContentCategory {
     Educational,
     Legal,
     Financial,
-    
+
     // Dynamic - for discovered categories
     Discovered {
         name: String,
@@ -162,17 +164,17 @@ impl ImagePrompt {
             format,
             config,
         };
-        
+
         // Add dynamic discovery instructions
         let dynamic_text = prompt.add_dynamic_discovery_prompt();
         prompt.text.push_str("\n\n");
         prompt.text.push_str(&dynamic_text);
-        
+
         prompt
     }
     fn get_concise_prompt(config: &AnalysisConfig) -> String {
         let mut prompt = "Analyze this image and describe its contents concisely.".to_string();
-        
+
         if config.extract_text {
             prompt.push_str(" Extract any visible text.");
         }
@@ -399,17 +401,20 @@ impl ImagePrompt {
 - Note accessibility considerations
 - Identify platform-specific patterns
 - Map navigation structure
-- Flag any security/privacy concerns"#.to_string();
+- Flag any security/privacy concerns"#
+                    .to_string();
 
                 if let Some(platform_name) = platform {
-                    instructions.push_str(&format!("\n\nSpecific to {platform_name}:
+                    instructions.push_str(&format!(
+                        "\n\nSpecific to {platform_name}:
 - Check platform-specific design guidelines
 - Identify standard platform components
-- Note any platform-specific conventions"));
+- Note any platform-specific conventions"
+                    ));
                 }
 
                 instructions
-            },
+            }
             // ... [rest of the category matches from your original code]
             _ => r#"Perform comprehensive analysis considering:
 - Primary purpose
@@ -420,7 +425,8 @@ impl ImagePrompt {
 - Practical applications
 - Quality indicators
 - Notable patterns
-- Unique characteristics"#.to_string(),
+- Unique characteristics"#
+                .to_string(),
         }
     }
 
@@ -492,7 +498,7 @@ mod tests {
         for format in formats {
             let prompt = ImagePrompt::new(format.clone());
             assert!(!prompt.text.is_empty());
-            
+
             // Test with specific configuration
             let config = AnalysisConfig {
                 extract_text: true,
@@ -509,17 +515,19 @@ mod tests {
                 cultural_analysis: true,
                 technical_details: true,
                 accessibility_analysis: true,
-                content_category: Some(ContentCategory::Screenshot { platform: Some("iOS".to_string()) }),
+                content_category: Some(ContentCategory::Screenshot {
+                    platform: Some("iOS".to_string()),
+                }),
                 custom_traits: vec![],
             };
-            
+
             let prompt_with_config = ImagePrompt::with_config(format, config);
             assert!(!prompt_with_config.text.is_empty());
-            
+
             // Test OpenAI content generation
             let openai_content = prompt.to_openai_content();
             assert!(openai_content.is_array());
-            
+
             // Test Ollama prompt generation
             let ollama_prompt = prompt.to_ollama_prompt();
             assert!(!ollama_prompt.is_empty());
@@ -529,7 +537,9 @@ mod tests {
     #[test]
     fn test_category_specific_prompts() {
         let categories = vec![
-            ContentCategory::Screenshot { platform: Some("iOS".to_string()) },
+            ContentCategory::Screenshot {
+                platform: Some("iOS".to_string()),
+            },
             ContentCategory::Recipe,
             ContentCategory::Document,
             ContentCategory::Map,
@@ -540,11 +550,11 @@ mod tests {
                 content_category: Some(category),
                 ..Default::default()
             };
-            
+
             let prompt = ImagePrompt::with_config(PromptFormat::Json, config);
             assert!(prompt.text.contains("For this"));
             assert!(!prompt.text.is_empty());
-            
+
             // Verify dynamic discovery prompt is included
             assert!(prompt.text.contains("Pattern Recognition"));
             assert!(prompt.text.contains("Innovation Detection"));
@@ -559,9 +569,9 @@ mod tests {
             cultural_analysis: true,
             ..Default::default()
         };
-        
+
         let prompt = ImagePrompt::with_config(PromptFormat::Json, config);
-        
+
         // Check for dynamic analysis elements
         assert!(prompt.text.contains("dynamic_extensions"));
         assert!(prompt.text.contains("discovered_categories"));
@@ -571,13 +581,10 @@ mod tests {
     #[test]
     fn test_custom_traits() {
         let config = AnalysisConfig {
-            custom_traits: vec![
-                "brand_safety".to_string(),
-                "viral_potential".to_string(),
-            ],
+            custom_traits: vec!["brand_safety".to_string(), "viral_potential".to_string()],
             ..Default::default()
         };
-        
+
         let prompt = ImagePrompt::with_config(PromptFormat::Detailed, config);
         assert!(prompt.text.contains("brand_safety") || prompt.text.contains("viral_potential"));
     }
@@ -586,11 +593,11 @@ mod tests {
     fn test_platform_specific_screenshot() {
         let config = AnalysisConfig {
             content_category: Some(ContentCategory::Screenshot {
-                platform: Some("iOS".to_string())
+                platform: Some("iOS".to_string()),
             }),
             ..Default::default()
         };
-        
+
         let prompt = ImagePrompt::with_config(PromptFormat::Detailed, config);
         assert!(prompt.text.contains("iOS"));
         assert!(prompt.text.contains("platform-specific"));
@@ -601,12 +608,12 @@ mod tests {
         let prompt = ImagePrompt::new(PromptFormat::Json);
         let serialized = serde_json::to_string(&prompt).unwrap();
         assert!(!serialized.is_empty());
-        
+
         // Test OpenAI format
         let openai_content = prompt.to_openai_content();
         assert!(openai_content.is_array());
         assert_eq!(openai_content.as_array().unwrap().len(), 2);
-        
+
         // Test Ollama format
         let ollama_prompt = prompt.to_ollama_prompt();
         assert!(!ollama_prompt.is_empty());
