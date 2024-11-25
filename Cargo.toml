@@ -1,6 +1,6 @@
 [package]
 name = "eyeris"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Steve Caldwell"]
 description = "A high-performance image analysis service with AI provider support"
