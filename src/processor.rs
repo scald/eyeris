@@ -1,5 +1,6 @@
 use crate::errors::ProcessorError;
 use crate::prompts::{ImagePrompt, PromptFormat};
+use crate::providers::TokenUsage;
 use crate::providers::{AIProvider, OllamaProvider, OpenAIProvider, Provider};
 use base64::Engine;
 use image::codecs::jpeg::JpegEncoder;
@@ -7,7 +8,6 @@ use image::imageops::FilterType;
 use image::{DynamicImage, ImageBuffer};
 use rayon::prelude::*;
 use std::time::Instant;
-use crate::providers::TokenUsage;
 
 /// The main processor for analyzing images.
 pub struct ImageProcessor {
@@ -82,7 +82,10 @@ impl ImageProcessor {
         analysis_result
     }
 
-    async fn analyze_image(&self, base64_image: &str) -> Result<(String, TokenUsage), ProcessorError> {
+    async fn analyze_image(
+        &self,
+        base64_image: &str,
+    ) -> Result<(String, TokenUsage), ProcessorError> {
         let start = Instant::now();
 
         // Get the length before moving the string
@@ -140,7 +143,10 @@ impl ImageProcessor {
         // Create the prompt before calling the provider
         let prompt = ImagePrompt::new(self.format.clone());
 
-        let (analysis, token_usage) = self.provider.analyze(&optimized_image, &prompt.text).await?;
+        let (analysis, token_usage) = self
+            .provider
+            .analyze(&optimized_image, &prompt.text)
+            .await?;
 
         tracing::info!(
             total_duration_ms = start.elapsed().as_millis(),

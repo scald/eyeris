@@ -32,5 +32,9 @@ pub enum AIProvider {
 
 #[async_trait]
 pub trait Provider: Send + Sync {
-    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<(String, Option<TokenUsage>), ProcessorError>;
+    async fn analyze(
+        &self,
+        base64_image: &str,
+        prompt: &str,
+    ) -> Result<(String, Option<TokenUsage>), ProcessorError>;
 }

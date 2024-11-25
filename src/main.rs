@@ -7,13 +7,13 @@ use axum::{
     Router,
 };
 use bytes::Bytes;
+use eyeris::providers::TokenUsage;
 use eyeris::{processor::ImageProcessor, prompts::PromptFormat, providers::AIProvider};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::sync::OnceLock;
 use std::time::Instant;
 use tokio::sync::Semaphore;
-use eyeris::providers::TokenUsage;
 
 // Create a static processor pool
 static PROCESSOR_POOL: OnceLock<Arc<ImageProcessor>> = OnceLock::new();
@@ -156,16 +156,14 @@ async fn process_image(
     );
 
     match result {
-        Ok((analysis, token_usage)) => {
-            Ok(Json(ProcessResponse {
-                success: true,
-                message: "Image processed successfully".to_string(),
-                data: Some(ProcessedData {
-                    analysis,
-                    token_usage,
-                }),
-            }))
-        }
+        Ok((analysis, token_usage)) => Ok(Json(ProcessResponse {
+            success: true,
+            message: "Image processed successfully".to_string(),
+            data: Some(ProcessedData {
+                analysis,
+                token_usage,
+            }),
+        })),
         Err(e) => Ok(Json(ProcessResponse {
             success: false,
             message: format!("Processing failed: {}", e),

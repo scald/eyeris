@@ -44,7 +44,11 @@ impl OpenAIProvider {
 
 #[async_trait]
 impl Provider for OpenAIProvider {
-    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<(String, Option<TokenUsage>), ProcessorError> {
+    async fn analyze(
+        &self,
+        base64_image: &str,
+        prompt: &str,
+    ) -> Result<(String, Option<TokenUsage>), ProcessorError> {
         let api_key = std::env::var("OPENAI_API_KEY").map_err(ProcessorError::EnvError)?;
 
         let request_body = json!({

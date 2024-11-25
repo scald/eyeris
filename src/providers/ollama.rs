@@ -32,7 +32,11 @@ impl OllamaProvider {
 
 #[async_trait]
 impl Provider for OllamaProvider {
-    async fn analyze(&self, base64_image: &str, prompt: &str) -> Result<(String, Option<TokenUsage>), ProcessorError> {
+    async fn analyze(
+        &self,
+        base64_image: &str,
+        prompt: &str,
+    ) -> Result<(String, Option<TokenUsage>), ProcessorError> {
         let ollama_request = OllamaRequest {
             model: self.model.clone(),
             prompt: prompt.to_string(),
