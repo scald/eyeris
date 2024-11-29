@@ -1,6 +1,6 @@
 [package]
 name = "eyeris"
-version = "0.1.1"
+version = "0.1.0"
 edition = "2021"
 authors = ["Steve Caldwell"]
 description = "A high-performance image analysis service with AI provider support"
@@ -12,7 +12,7 @@ keywords = ["ai", "image-analysis", "vision", "openai", "ollama"]
 categories = ["computer-vision", "api-bindings", "multimedia::images"]
 
 [dependencies]
-tokio = { version = "1.36", features = ["full"] }
+tokio = { version = "1.0", features = ["full"] }
 axum = { version = "0.7", features = ["multipart"] }
 image = "0.24"
 base64 = "0.21"
@@ -27,4 +27,5 @@ futures = "0.3"
 bytes = { version = "1.5", features = ["serde"] }
 thiserror = "1.0"
 parking_lot = "0.12"
-async-trait = "0.1" 
+async-trait = "0.1"
+tower-http = { version = "0.5", features = ["fs"] } 

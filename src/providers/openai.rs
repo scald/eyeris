@@ -38,7 +38,7 @@ impl OpenAIProvider {
     pub fn new(model: Option<String>) -> Self {
         Self {
             client: Client::new(),
-            model: model.unwrap_or_else(|| "gpt-4-vision-preview".to_string()),
+            model: model.unwrap_or_else(|| "gpt-4o".to_string()),
             temperature: 0.0,
         }
     }
@@ -53,26 +53,35 @@ impl Provider for OpenAIProvider {
     ) -> Result<(String, Option<TokenUsage>), ProcessorError> {
         let api_key = std::env::var("OPENAI_API_KEY").map_err(ProcessorError::EnvError)?;
 
+        let system_prompt =
+            "You are a detailed image analysis system. When analyzing images, please provide a complete and thorough analysis in a structured JSON format. Include all visible text, elements, and details. Never truncate or summarize the content - provide everything you can see in the image. If the content is long, break it into appropriate sections but ensure ALL content is captured.";
+
         let request_body =
             json!({
             "model": self.model,
             "temperature": self.temperature,
-            "messages": [{
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": prompt
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": format!("data:image/jpeg;base64,{}", base64_image)
+            "max_completion_tokens": 16384,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": format!("{}\nPlease analyze this image completely and provide ALL visible content in a structured JSON format. Do not omit or summarize any text or elements.", prompt)
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": format!("data:image/jpeg;base64,{}", base64_image)
+                            }
                         }
-                    }
-                ]
-            }],
-            "max_completion_tokens": 10000
+                    ]
+                }
+            ]
         });
 
         let response = self.client
