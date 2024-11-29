@@ -1,90 +1,67 @@
-# eyeris
+# Eyeris - AI Image Analysis Web App
 
-[![Build Status](https://github.com/scald/eyeris/workflows/CI/badge.svg)](https://github.com/scald/eyeris/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Crates.io](https://img.shields.io/crates/v/eyeris.svg)](https://crates.io/crates/eyeris)
-[![Documentation](https://docs.rs/eyeris/badge.svg)](https://docs.rs/eyeris)
-
-A high-performance image analysis service that leverages AI models to provide detailed analysis of images. Supports multiple AI providers (currently OpenAI and Ollama).
+Eyeris is a web application that provides detailed AI-powered image analysis using OpenAI's GPT-4 with vision capabilities. It features a modern, easy-to-use interface for uploading and analyzing images.
 
 ## Features
 
-- 🚀 High-performance image processing with parallel execution
-- 🤖 Multiple AI provider support (OpenAI, Ollama)
-- 📊 Detailed image analysis with customizable formats
-- 🖼️ Automatic image optimization and thumbnail generation
-- 📈 Token usage tracking
-- 🔒 Rate limiting built-in
-- 📝 Comprehensive logging
+- 🖼️ Simple drag-and-drop image upload interface
+- 🤖 Powered by OpenAI's GPT-4 vision model
+- 📊 Detailed JSON-structured analysis output
+- 🚀 Built with Rust for high performance
+- 🌐 Modern web interface
 
-## Quick Start
+## Getting Started
+
+### Prerequisites
+
+- Rust (latest stable version)
+- An OpenAI API key
+
+### Installation
+
+1. Clone the repository:
 
 ```bash
-# Clone the repository
-git clone https://github.com/scald/eyeris
-
-# Navigate to project directory
+git clone https://github.com/yourusername/eyeris.git
 cd eyeris
+```
 
-# Configure OpenAI API key (if using OpenAI)
-echo "OPENAI_API_KEY=your_key_here" > .env
+2. Set up your OpenAI API key:
 
-# Run the service
+```bash
+export OPENAI_API_KEY='your-api-key-here'
+```
+
+3. Build and run:
+
+```bash
 cargo run
 ```
 
-## API Usage
+4. Open your browser and navigate to:
 
-Send an image for analysis:
-
-```bash
-curl -X POST http://localhost:3000/process \
-  -F "image=@path/to/your/image.jpg" \
-  -F "provider=ollama" \
-  -F "model=moondream" \
-  -F "format=json"
+```
+http://localhost:3000
 ```
 
-## Output Formats
+## Usage
 
-- **JSON**: Structured data format for programmatic use
-- **Concise**: Brief summary of key elements
-- **Detailed**: Comprehensive analysis with multiple aspects
-- **List**: Enumerated format for easy reading
+1. Open the web interface in your browser
+2. Drag and drop an image or click "Choose File" to select one
+3. Wait for the analysis to complete
+4. View the detailed JSON analysis of your image
 
-## Performance
+## Tech Stack
 
-The service is optimized for performance through:
-
-- Parallel processing with Rayon
-- Automatic image optimization
-- Efficient memory management
-- Rate limiting for stability
-
-## Project Structure
-
-```bash
-src/
-├── processor.rs # Core processing logic
-├── providers/   # AI provider implementations
-├── prompts.rs   # Analysis prompt templates
-└── main.rs      # Service entry point
-```
+- **Backend**: Rust with Axum web framework
+- **Frontend**: HTML, CSS, JavaScript
+- **AI**: OpenAI GPT-4 Vision API
+- **Image Processing**: Rust image crate
 
 ## Contributing
 
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Add your changes
-4. Write/update tests
-5. Submit a pull request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License
-
----
-
-Built with Rust 🦀
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -3,13 +3,6 @@ name = "eyeris"
 version = "0.1.0"
 edition = "2021"
 authors = ["Steve Caldwell"]
-description = "A high-performance image analysis service with AI provider support"
-license = "MIT"
-repository = "https://github.com/scald/eyeris"
-documentation = "https://docs.rs/eyeris"
-readme = "README.md"
-keywords = ["ai", "image-analysis", "vision", "openai", "ollama"]
-categories = ["computer-vision", "api-bindings", "multimedia::images"]
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
