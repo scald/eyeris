@@ -21,4 +21,4 @@ bytes = { version = "1.5", features = ["serde"] }
 thiserror = "1.0"
 parking_lot = "0.12"
 async-trait = "0.1"
-tower-http = { version = "0.5", features = ["fs"] } 
+tower-http = { version = "0.5", features = ["fs", "cors", "limit"] } 

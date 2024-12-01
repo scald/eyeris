@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::{ Deserialize, Serialize };
+use std::fmt;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ImagePrompt {
@@ -327,6 +328,12 @@ BEGIN ANALYSIS NOW WITH OPENING { AND END WITH CLOSING }"#.to_string(),
     }
 }
 
+impl fmt::Display for ImagePrompt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -355,15 +362,12 @@ mod tests {
 
     #[test]
     fn test_custom_traits() {
-        let format = PromptFormat::Custom(vec![
-            "brand_safety".to_string(),
-            "viral_potential".to_string(),
-        ]);
+        let format = PromptFormat::Custom(
+            vec!["brand_safety".to_string(), "viral_potential".to_string()]
+        );
         let prompt = ImagePrompt::new(format);
         // Update assertion to match the actual prompt text format
-        assert!(prompt
-            .text
-            .contains("Analyze this image for the following aspects:"));
+        assert!(prompt.text.contains("Analyze this image for the following aspects:"));
     }
 
     #[test]
