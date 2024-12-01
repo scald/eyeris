@@ -2,10 +2,8 @@ use crate::{
     errors::ProcessorError,
     prompts::{ ImagePrompt, PromptFormat },
     providers::{ AIProvider, Provider, TokenUsage },
-    utils::enhance_image,
 };
 use base64::Engine;
-use image::{ DynamicImage, ImageFormat };
 use std::time::Instant;
 use tracing::{ info, debug, error };
 
@@ -48,7 +46,6 @@ impl ImageProcessor {
         debug!("Successfully loaded image: {}x{}", img.width(), img.height());
 
         // Process image
-        let enhanced = enhance_image(&img)?;
         debug!("Image enhancement complete");
 
         // Convert to base64

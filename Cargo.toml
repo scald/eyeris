@@ -6,7 +6,7 @@ authors = ["Steve Caldwell"]
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
-axum = { version = "0.7", features = ["multipart"] }
+axum = { version = "0.7", features = ["multipart", "macros"] }
 image = "0.24"
 base64 = "0.21"
 serde = { version = "1.0", features = ["derive"] }

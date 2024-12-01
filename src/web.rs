@@ -1,10 +1,9 @@
 use axum::{
     extract::{ Multipart, Query },
-    response::{ Html, Json, Response, IntoResponse },
+    response::{ Html, Json },
     routing::{ get, post },
     Router,
     http::StatusCode,
-    body::Bytes,
 };
 use serde::{ Serialize, Deserialize };
 use std::net::SocketAddr;
@@ -12,9 +11,8 @@ use tokio::fs;
 use tower_http::{ services::ServeDir, cors::CorsLayer, limit::RequestBodyLimitLayer };
 use tracing::{ info, warn, error, debug, Level };
 use tracing_subscriber::FmtSubscriber;
-use futures::StreamExt;
-
 use eyeris::{ AIProvider, ImageProcessor, TokenUsage };
+use axum::response::IntoResponse;
 
 #[derive(Debug, Serialize)]
 struct ApiResponse<T> {
@@ -42,7 +40,7 @@ fn default_model() -> String {
 
 pub async fn run_server() {
     // Initialize logging first, before any other operations
-    let subscriber = FmtSubscriber::builder()
+    let _subscriber = FmtSubscriber::builder()
         .with_max_level(Level::DEBUG)
         .with_line_number(true)
         .with_file(true)
@@ -124,34 +122,15 @@ async fn serve_index() -> Html<String> {
     Html(index_html)
 }
 
-async fn handle_upload(mut multipart: Multipart) -> impl IntoResponse {
-    match process_image_upload(multipart).await {
-        Ok(analysis) =>
-            Json(ApiResponse {
-                success: true,
-                message: "Analysis completed successfully".to_string(),
-                data: Some(analysis),
-            }).into_response(),
-        Err(e) =>
-            (
-                StatusCode::BAD_REQUEST,
-                Json(ApiResponse::<AnalysisResponse> {
-                    success: false,
-                    message: e.to_string(),
-                    data: None,
-                }),
-            ).into_response(),
-    }
-}
-
 // API handlers
+#[axum::debug_handler]
 async fn api_analyze(
     Query(options): Query<AnalysisOptions>,
-    mut multipart: Multipart
+    multipart: Multipart
 ) -> impl IntoResponse {
     debug!("Received analyze request with options: {:?}", options);
 
-    match process_image_upload(multipart).await {
+    match process_image_upload(multipart, options).await {
         Ok(analysis) => {
             info!("Successfully processed image");
             (
@@ -186,11 +165,14 @@ async fn health_check() -> impl IntoResponse {
 }
 
 // Helper functions
-async fn process_image_upload(mut multipart: Multipart) -> Result<AnalysisResponse, String> {
+async fn process_image_upload(
+    mut multipart: Multipart,
+    options: AnalysisOptions
+) -> Result<AnalysisResponse, String> {
     debug!("Starting multipart processing");
-    let processor = ImageProcessor::new(AIProvider::OpenAI, None, None);
+    let processor = ImageProcessor::new(AIProvider::OpenAI, Some(options.model), None);
 
-    let mut field = match multipart.next_field().await {
+    let field = match multipart.next_field().await {
         Ok(Some(field)) => {
             debug!(
                 "Received field: name={:?}, filename={:?}, content_type={:?}",
