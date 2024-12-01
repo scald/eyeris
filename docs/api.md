@@ -2,7 +2,7 @@
 
 ## Base URL
 
-```
+```text
 http://localhost:3000/api/v1
 ```
 
@@ -28,8 +28,6 @@ POST /analyze
 | image | file   | form  | The image file to analyze                                   |
 | model | string | query | (Optional) The model to use for analysis. Default: "gpt-4o" |
 
-#### Response
-
 ```json
 {
   "success": true,
@@ -45,8 +43,6 @@ POST /analyze
 }
 ```
 
-##### Error Response
-
 ```json
 {
   "success": false,
@@ -61,8 +57,6 @@ Check if the API is running and healthy.
 ```http
 GET /health
 ```
-
-#### Response
 
 ```json
 {

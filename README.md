@@ -27,19 +27,19 @@ git clone https://github.com/yourusername/eyeris.git
 cd eyeris
 ```
 
-2. Set up your OpenAI API key:
+1. Set up your OpenAI API key:
 
 ```bash
 export OPENAI_API_KEY='your-api-key-here'
 ```
 
-3. Build and run:
+1. Build and run:
 
 ```bash
 cargo run
 ```
 
-4. Access the service:
+1. Access the service:
 
 - Web Interface: `http://localhost:3000`
 - API Endpoint: `http://localhost:3000/api/v1`
