@@ -6,7 +6,7 @@ Eyeris is a powerful image analysis service that provides both a web interface a
 
 - 🖼️ Simple drag-and-drop web interface
 - 🔌 RESTful API for integration
-- 🤖 Powered by OpenAI's GPT-4 vision model
+- 🤖 Powered by OpenAI's GPT-4o vision model
 - 📊 Detailed JSON-structured analysis output
 - 🚀 Built with Rust for high performance
 - 🌐 CORS-enabled for web applications
@@ -71,7 +71,7 @@ See the [API Documentation](docs/api.md) for detailed endpoint information and e
 
 - **Backend**: Rust with Axum web framework
 - **Frontend**: HTML, CSS, JavaScript
-- **AI**: OpenAI GPT-4 Vision API
+- **AI**: OpenAI GPT-4o Vision API
 - **Image Processing**: Rust image crate
 
 ## API Documentation
